@@ -417,8 +417,11 @@ export class DaemonApi {
     this.usbip.reconnectNow();
   }
 
-  async urlTest(outboundTag: string): Promise<void> {
-    await this.client.uRLTest({ outboundTag });
+  async urlTest(outboundTag: string, url = ""): Promise<void> {
+    if (url !== "") {
+      await this.requireApiVersion(MIN_API_VERSION.urlTestUrl);
+    }
+    await this.client.uRLTest({ outboundTag, url });
   }
 
   async selectOutbound(groupTag: string, outboundTag: string): Promise<void> {

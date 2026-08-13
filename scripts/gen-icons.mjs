@@ -31,6 +31,7 @@ const ICONS = {
   pause: "filled",
   play_arrow: "filled",
   network_check: "outlined",
+  link: "outlined",
   swap_horiz: "filled",
   hub: "outlined",
   open_in_new: "filled",

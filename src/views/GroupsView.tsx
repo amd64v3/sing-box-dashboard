@@ -6,6 +6,7 @@ import { useApi } from "../app/context";
 import { showError } from "../app/errorStore";
 import { usePendingValue } from "../app/hooks";
 import { useI18n } from "../app/i18n";
+import { runURLTest as runConfiguredURLTest } from "../app/urlTest";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { StreamStates } from "../components/StreamBanner";
@@ -52,8 +53,7 @@ function GroupCard(props: { group: Group }) {
 
   const runURLTest = () => {
     setTesting(true);
-    api
-      .urlTest(group.tag)
+    runConfiguredURLTest(api, group.tag)
       .catch(showError)
       .finally(() => setTesting(false));
   };
@@ -130,7 +130,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
   const { t } = useI18n();
   const item = props.item;
   const menu = useContextMenu(
-    <MenuItem icon="speed" onSelect={() => api.urlTest(item.tag).catch(showError)}>
+    <MenuItem icon="speed" onSelect={() => runConfiguredURLTest(api, item.tag).catch(showError)}>
       {t("URL test")}
     </MenuItem>,
   );

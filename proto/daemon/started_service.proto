@@ -124,6 +124,7 @@ message GroupItem {
 
 message URLTestRequest {
   string outboundTag = 1;
+  string url = 2;
 }
 
 message SelectOutboundRequest {

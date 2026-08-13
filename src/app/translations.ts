@@ -129,6 +129,11 @@ export const TRANSLATIONS = {
   "Empty groups": { "zh-Hans": "无分组", "zh-Hant": "無分組", "fa": "بدون گروه", "ru": "Нет групп" },
   "Loading...": { "zh-Hans": "加载中...", "zh-Hant": "加載中...", "fa": "در حال بارگذاری...", "ru": "Загрузка..." },
   "URL test": { "zh-Hans": "URL 测试", "zh-Hant": "URL 測試", "fa": "تست URL", "ru": "URL-тест" },
+  "Connectivity": { "zh-Hans": "连通性", "zh-Hant": "連通性", "fa": "اتصال", "ru": "Подключение" },
+  "Connection test URL": { "zh-Hans": "连接测试URL", "zh-Hant": "連接測試URL", "fa": "URL تست اتصال", "ru": "URL-адрес проверки подключения" },
+  "Invalid URL": { "zh-Hans": "无效的 URL", "zh-Hant": "無效的 URL", "fa": "URL نامعتبر است", "ru": "Недопустимый URL" },
+  "Only HTTPS URLs are supported": { "zh-Hans": "仅支持 HTTPS URL", "zh-Hant": "僅支援 HTTPS URL", "fa": "فقط URLهای HTTPS پشتیبانی می‌شوند", "ru": "Поддерживаются только URL-адреса HTTPS" },
+  "Must be a valid HTTPS URL. Leave blank to use the Sing-Box default.": { "zh-Hans": "必须是有效的 HTTPS URL。留空以使用 Sing-Box 默认值。", "zh-Hant": "必須是有效的 HTTPS URL。留空以使用 Sing-Box 預設值。", "fa": "باید یک URL معتبر HTTPS باشد. برای استفاده از مقدار پیش‌فرض Sing-Box آن را خالی بگذارید.", "ru": "Должен быть указан допустимый HTTPS URL. Оставьте поле пустым, чтобы использовать значение Sing-Box по умолчанию." },
   "Expand": { "zh-Hans": "展开", "zh-Hant": "展開", "fa": "گسترش", "ru": "Развернуть" },
   "Collapse": { "zh-Hans": "收起", "zh-Hant": "收起", "fa": "جمع کردن", "ru": "Свернуть" },
 
