@@ -16,6 +16,7 @@ import { useDaemonConnection, useDesktopProfiles } from "./app/desktop";
 import type { DesktopHost } from "./app/desktop";
 import { dismissError, showError, useCurrentError } from "./app/errorStore";
 import { I18nProvider, useI18n } from "./app/i18n";
+import { runURLTest as runConfiguredURLTest } from "./app/urlTest";
 import { Icon } from "./components/Icon";
 import { Spinner, Switch } from "./components/ui";
 import { ServiceStatus_Type } from "./gen/daemon/started_service_pb";
@@ -450,7 +451,7 @@ function GroupsSubmenu(props: {
         onMouseEnter={props.onClose}
         onClick={() => {
           setTestingAll(true);
-          Promise.all(props.groups.map((group) => props.api.urlTest(group.tag)))
+          Promise.all(props.groups.map((group) => runConfiguredURLTest(props.api, group.tag)))
             .catch(showError)
             .finally(() => setTestingAll(false));
         }}
@@ -507,8 +508,7 @@ function GroupNodes(props: { group: Group; api: DaemonApi; onClose: () => void }
 
   const runURLTest = () => {
     setTesting(true);
-    props.api
-      .urlTest(group.tag)
+    runConfiguredURLTest(props.api, group.tag)
       .catch(showError)
       .finally(() => setTesting(false));
   };

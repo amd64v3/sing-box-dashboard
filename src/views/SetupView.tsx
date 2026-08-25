@@ -6,17 +6,11 @@ import { useDiagnosedConnectError } from "../app/connectError";
 import type { AccentPreference, ThemePreference } from "../app/context";
 import { LanguageSelect, useI18n, type Translate } from "../app/i18n";
 import { Icon } from "../components/Icon";
-import {
-  ReachabilityIndicator,
-  useServerReachability,
-} from "../components/ReachabilityIndicator";
 import { Brand, Button, Field, SecretInput, Spinner, ThemeMenu, ThemeSelect } from "../components/ui";
 import { guessApiBaseUrl } from "../lib/connectivity";
-import { checkServerReachable } from "../lib/reachability";
 import styles from "./SetupView.module.css";
 
 const CONNECT_TIMEOUT_MS = 8000;
-const AUTODETECT_TIMEOUT_MS = 8000;
 
 async function testConnection(
   server: Server,
@@ -32,6 +26,11 @@ async function testConnection(
   throw new Error(t("Stream ended without a status message"));
 }
 
+function initialApiUrl(): string {
+  const candidate = guessApiBaseUrl(location.href);
+  return candidate === null ? "" : normalizeServerUrl(candidate);
+}
+
 export function SetupView(props: {
   onCreate: (server: Server) => void;
   theme: ThemePreference;
@@ -41,39 +40,14 @@ export function SetupView(props: {
 }) {
   const { t, language } = useI18n();
   const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialApiUrl);
   const [secret, setSecret] = useState("");
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<{ message: string; url: string } | null>(null);
   const errorDetail = useDiagnosedConnectError(error?.message ?? null, error?.url ?? "");
-  const reachability = useServerReachability(url, secret);
   const controllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => () => controllerRef.current?.abort(), []);
-
-  useEffect(() => {
-    const candidate = guessApiBaseUrl(location.href);
-    if (candidate === null) {
-      return;
-    }
-    const normalized = normalizeServerUrl(candidate);
-    if (normalized === "") {
-      return;
-    }
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), AUTODETECT_TIMEOUT_MS);
-    void checkServerReachable(normalized, "", language, controller.signal)
-      .then((reachable) => {
-        if (reachable) {
-          setUrl((current) => (current === "" ? normalized : current));
-        }
-      })
-      .finally(() => clearTimeout(timer));
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-    };
-  }, [language]);
 
   const normalizedUrl = normalizeServerUrl(url);
   const valid = normalizedUrl !== "";
@@ -146,7 +120,10 @@ export function SetupView(props: {
               value={url}
               placeholder={t("Required")}
               disabled={connecting}
-              onChange={(event) => setUrl(event.target.value)}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                setError(null);
+              }}
             />
           </Field>
           <Field label={t("Secret")}>
@@ -154,10 +131,12 @@ export function SetupView(props: {
               value={secret}
               placeholder={t("Optional")}
               disabled={connecting}
-              onChange={setSecret}
+              onChange={(value) => {
+                setSecret(value);
+                setError(null);
+              }}
             />
           </Field>
-          {error === null && <ReachabilityIndicator reachability={reachability} url={url} />}
           {errorDetail !== null && (
             <div className="banner error">
               <Icon name="warning_amber" />
@@ -168,7 +147,7 @@ export function SetupView(props: {
             variant="primary"
             className={styles.setupSubmit}
             type="submit"
-            disabled={!valid || connecting || reachability.status !== "online"}
+            disabled={!valid || connecting}
           >
             {connecting && <Spinner />}
             {connecting ? t("Connecting...") : t("Connect")}

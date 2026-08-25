@@ -45,6 +45,8 @@ export interface StatusData {
 export interface GroupsData {
   groups: Group[];
   loaded: boolean;
+  urlTestUrl: string;
+  urlTestUrlPersistent: boolean;
 }
 
 export interface ClashModeData {
@@ -177,10 +179,15 @@ export class DaemonApi {
     );
 
     this.groups = new StreamStore<GroupsData>(
-      () => ({ groups: [], loaded: false }),
+      () => ({ groups: [], loaded: false, urlTestUrl: "", urlTestUrlPersistent: false }),
       async ({ signal, update }) => {
         for await (const message of this.client.subscribeGroups({}, { signal })) {
-          update(() => ({ groups: message.group, loaded: true }));
+          update(() => ({
+            groups: message.group,
+            loaded: true,
+            urlTestUrl: message.urlTestUrl,
+            urlTestUrlPersistent: message.urlTestUrlPersistent,
+          }));
         }
       },
     );
@@ -417,8 +424,16 @@ export class DaemonApi {
     this.usbip.reconnectNow();
   }
 
-  async urlTest(outboundTag: string): Promise<void> {
-    await this.client.uRLTest({ outboundTag });
+  async urlTest(outboundTag: string, url = ""): Promise<void> {
+    if (url !== "") {
+      await this.requireApiVersion(MIN_API_VERSION.urlTestUrl);
+    }
+    await this.client.uRLTest({ outboundTag, url });
+  }
+
+  async storeURLTestURL(url: string): Promise<void> {
+    await this.requireApiVersion(MIN_API_VERSION.urlTestUrl);
+    await this.client.uRLTest({ outboundTag: "", url, storeUrl: true });
   }
 
   async selectOutbound(groupTag: string, outboundTag: string): Promise<void> {

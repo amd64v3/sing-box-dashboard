@@ -19,6 +19,7 @@ import {
   saveDisableDeprecatedWarnings,
 } from "../app/deprecatedWarnings";
 import { showError } from "../app/errorStore";
+import { loadURLTestURL, saveURLTestURL, validateURLTestURL } from "../app/urlTest";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
 import { LanguageSelect, useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
@@ -690,6 +691,9 @@ export function PreferencesView(props: {
   onAccentChange: (accent: AccentPreference) => void;
 }) {
   const { t } = useI18n();
+  const api = useApi();
+  const groups = useStream(api.groups);
+  const urlTestURL = groups.data.loaded ? loadURLTestURL(api).url : "";
   return (
     <div className="page">
       <SettingsPageHeader title={t("Preferences")} />
@@ -712,6 +716,25 @@ export function PreferencesView(props: {
           </div>
         </div>
         <div>
+          <div className="list-section-title">{t("Connectivity")}</div>
+          <div className={styles.settingsList}>
+            <button
+              type="button"
+              className="settings-row"
+              onClick={() => navigate("settings/preferences/url-test")}
+            >
+              <Icon name="link" size={15} />
+              <span className={styles.connectionTestLabel}>{t("Connection test URL")}</span>
+              <span className={styles.connectionTestUrl}>
+                {urlTestURL === "" ? t("Default") : urlTestURL}
+              </span>
+              <span className="settings-row-chevron">
+                <Icon name="keyboard_arrow_right" size={14} />
+              </span>
+            </button>
+          </div>
+        </div>
+        <div>
           <div className="list-section-title">Tailscale</div>
           <div className="nav-list">
             <NavRow
@@ -720,6 +743,96 @@ export function PreferencesView(props: {
               onClick={() => navigate("settings/preferences/terminal")}
             />
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function URLTestPreferencesView() {
+  const { t } = useI18n();
+  const api = useApi();
+  const groups = useStream(api.groups);
+  const [savedValue, setSavedValue] = useState<string | null>(null);
+  const [value, setValue] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!groups.data.loaded || savedValue !== null) {
+      return;
+    }
+    const current = loadURLTestURL(api).url;
+    setSavedValue(current);
+    setValue(current);
+  }, [api, groups.data.loaded, groups.data.urlTestUrl, groups.data.urlTestUrlPersistent, savedValue]);
+
+  const normalizedValue = value.trim();
+  const validationError = validateURLTestURL(normalizedValue);
+  const changed = savedValue !== null && normalizedValue !== savedValue;
+
+  const save = () => {
+    if (savedValue === null || validationError !== null || saving) {
+      return;
+    }
+    setSaving(true);
+    saveURLTestURL(api, normalizedValue)
+      .then(() => navigate("settings/preferences"))
+      .catch(showError)
+      .finally(() => setSaving(false));
+  };
+
+  return (
+    <div className="page">
+      <SettingsPageHeader
+        title={t("Connection test URL")}
+        back="settings/preferences"
+        backLabel={t("Preferences")}
+      />
+      <div className="settings-stack">
+        <div>
+          <Field label={t("URL")}>
+            <input
+              className="input"
+              type="url"
+              inputMode="url"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              placeholder="https://example.com/generate_204"
+              value={value}
+              disabled={savedValue === null || saving}
+              onFocus={() => setEditing(true)}
+              onBlur={() => setEditing(false)}
+              onChange={(event) => setValue(event.target.value)}
+            />
+          </Field>
+          {!editing && validationError === "invalid" && (
+            <span className={styles.fieldError}>{t("Invalid URL")}</span>
+          )}
+          {!editing && validationError === "https" && (
+            <span className={styles.fieldError}>{t("Only HTTPS URLs are supported")}</span>
+          )}
+          <p className={styles.fieldNote}>
+            {t(
+              "Must be a valid HTTPS URL. Leave blank to use the Sing-Box default. Without the cache file, this setting is stored only in this browser.",
+            )}
+          </p>
+        </div>
+        <div className="row-actions">
+          <Button
+            onClick={() => setValue("")}
+            disabled={savedValue === null || saving || normalizedValue === ""}
+          >
+            {t("Reset")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={save}
+            disabled={savedValue === null || saving || validationError !== null || !changed}
+          >
+            {t("Save")}
+          </Button>
         </div>
       </div>
     </div>
